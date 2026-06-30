@@ -1,0 +1,403 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Sanchit Soni - Portfolio</title>
+    <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,width=device-width"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Hide keynote elements until authorized -->
+    <style id="keynote-hide-style">
+        #stageArea, #slideshowNavigator, #slideNumberControl, #slideNumberDisplay, #helpPlacard, #waitingIndicator {
+            display: none !important;
+        }
+    </style>
+    
+    <!-- Password Gate Premium Styles -->
+    <style>
+        :root {
+            --primary: #c084fc;
+            --primary-hover: #a855f7;
+            --bg-dark: #09090b;
+            --card-bg: rgba(20, 20, 23, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+        }
+
+        #password-gate-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            display: none; /* Controlled by JS */
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
+        }
+
+        .glow-spots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .glow-spot-1 {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.15) 0%, rgba(0,0,0,0) 70%);
+        }
+        
+        .glow-spot-2 {
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+        }
+
+        .password-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            padding: 48px 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            z-index: 10;
+            box-sizing: border-box;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+
+        .password-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(192, 132, 252, 0.05);
+        }
+
+        .icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 18px;
+            background: rgba(192, 132, 252, 0.08);
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            margin-bottom: 28px;
+            color: var(--primary);
+            position: relative;
+        }
+
+        .icon-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            opacity: 0.15;
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        .title {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0 0 32px 0;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .input-label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .password-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 15px 48px 15px 16px;
+            background: rgba(10, 10, 12, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .password-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.15);
+            background: rgba(10, 10, 12, 0.85);
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(192, 132, 252, 0.15);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(192, 132, 252, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 16px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+    </style>
+</head>
+<body id="body" bgcolor="black">
+    
+    <!-- Password Gate Overlay -->
+    <div id="password-gate-overlay">
+        <div class="glow-spots">
+            <div class="glow-spot-1"></div>
+            <div class="glow-spot-2"></div>
+        </div>
+        
+        <div class="password-card">
+            <div class="icon-wrapper">
+                <!-- Lock Icon -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            
+            <h1 class="title">Sanchit Soni</h1>
+            <p class="subtitle">This portfolio is password protected. Please enter the password to gain access.</p>
+            
+            <form id="password-form" autocomplete="off">
+                <div class="input-group">
+                    <label class="input-label" for="password-input">Password</label>
+                    <div class="input-wrapper">
+                        <input class="password-input" type="password" id="password-input" placeholder="Enter password" required autofocus>
+                        <button class="toggle-btn" type="button" id="toggle-password" aria-label="Toggle password visibility">
+                            <!-- Eye Open -->
+                            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <!-- Eye Closed -->
+                            <svg class="eye-closed" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="submit-btn" type="submit">
+                    <span>Unlock Portfolio</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+                
+                <div class="error-msg" id="error-msg">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>Incorrect password. Please try again.</span>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Keynote Elements -->
+    <div id="stageArea"><div id="stage" class="stage"></div><div id="hyperlinkPlane" class="stage"></div></div>
+    <div id="slideshowNavigator"></div>
+    <div id="slideNumberControl"></div>
+    <div id="slideNumberDisplay"></div>
+    <div id="helpPlacard"></div>
+    <div id="waitingIndicator"><div id="waitingSpinner"></div></div>
+    
+    <!-- Password Verification & Dynamic Loading Script -->
+    <script>
+        (function() {
+            const correctPassword = 'peppertree';
+            const authKey = 'sanchit_portfolio_authorized';
+            
+            function launchPortfolio() {
+                // Remove password gate UI from DOM to prevent interference
+                const overlay = document.getElementById('password-gate-overlay');
+                if (overlay) overlay.remove();
+                
+                // Remove Keynote hide style to allow slides layout to show
+                const hideStyle = document.getElementById('keynote-hide-style');
+                if (hideStyle) hideStyle.remove();
+                
+                // Dynamically inject the Keynote player script
+                const script = document.createElement('script');
+                script.src = 'assets/player/main.js';
+                document.body.appendChild(script);
+            }
+            
+            // 1. Check if user is already authenticated
+            if (localStorage.getItem(authKey) === 'true') {
+                launchPortfolio();
+                return;
+            }
+            
+            // 2. Otherwise, display the password gate overlay
+            const overlay = document.getElementById('password-gate-overlay');
+            overlay.style.display = 'flex';
+            
+            // 3. Set up event listeners for the password card
+            const form = document.getElementById('password-form');
+            const input = document.getElementById('password-input');
+            const card = document.querySelector('.password-card');
+            const errorMsg = document.getElementById('error-msg');
+            const toggleBtn = document.getElementById('toggle-password');
+            const eyeOpen = toggleBtn.querySelector('.eye-open');
+            const eyeClosed = toggleBtn.querySelector('.eye-closed');
+            
+            // Toggle visibility of password field
+            toggleBtn.addEventListener('click', function() {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eyeOpen.style.display = 'none';
+                    eyeClosed.style.display = 'block';
+                } else {
+                    input.type = 'password';
+                    eyeOpen.style.display = 'block';
+                    eyeClosed.style.display = 'none';
+                }
+            });
+            
+            // Form submit handler
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                errorMsg.style.display = 'none';
+                
+                if (input.value === correctPassword) {
+                    // Store authorization
+                    localStorage.setItem(authKey, 'true');
+                    
+                    // Trigger exit animations
+                    card.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease';
+                    card.style.transform = 'scale(0.94) translateY(10px)';
+                    card.style.opacity = '0';
+                    
+                    overlay.style.transition = 'opacity 0.4s ease';
+                    overlay.style.opacity = '0';
+                    
+                    // Wait for animations to end, then boot player
+                    setTimeout(launchPortfolio, 400);
+                } else {
+                    // Shake card and show error
+                    card.classList.remove('shake');
+                    void card.offsetWidth; // Force DOM reflow
+                    card.classList.add('shake');
+                    errorMsg.style.display = 'flex';
+                    input.value = '';
+                    input.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
