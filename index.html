@@ -16,7 +16,7 @@
         }
     </style>
     
-    <!-- Password Gate Premium Styles -->
+    <!-- Password Gate & Premium Styles -->
     <style>
         :root {
             --primary: #c084fc;
@@ -250,6 +250,61 @@
         .shake {
             animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
         }
+
+        /* Premium Play Button Styling for Embedded Videos */
+        .custom-video-play-btn {
+            position: absolute;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.1);
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .custom-video-play-btn:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .play-btn-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.3s;
+        }
+
+        .custom-video-play-btn:hover .play-btn-circle {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 15px 40px rgba(192, 132, 252, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2);
+            border-color: rgba(192, 132, 252, 0.5);
+            color: #c084fc; /* Match theme color */
+        }
+
+        .play-btn-circle svg {
+            width: 32px;
+            height: 32px;
+            margin-left: 4px; /* Optical centering for play triangle */
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+            transition: color 0.2s;
+        }
+
+        .custom-video-play-btn.playing {
+            opacity: 0;
+            pointer-events: none; /* Let clicks pass through when playing so user can click to pause */
+        }
     </style>
 </head>
 <body id="body" bgcolor="black">
@@ -321,7 +376,7 @@
     <div id="helpPlacard"></div>
     <div id="waitingIndicator"><div id="waitingSpinner"></div></div>
     
-    <!-- Password Verification Script -->
+    <!-- Password Verification & Video Helpers Script -->
     <script>
         (function() {
             const correctPassword = 'peppertree';
@@ -346,20 +401,111 @@
             if (localStorage.getItem(authKey) === 'true') {
                 if (hideStyle) hideStyle.remove();
                 if (overlay) overlay.remove();
-                return;
+            } else {
+                // Otherwise, display the password gate overlay
+                overlay.style.display = 'flex';
+                
+                // Prevent all events from bubbling up to document/window (Keynote player) while locked
+                const eventBlocker = function(e) {
+                    e.stopPropagation();
+                };
+                ['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend', 'touchmove'].forEach(function(evt) {
+                    overlay.addEventListener(evt, eventBlocker);
+                });
             }
             
-            // 2. Otherwise, display the password gate overlay
-            overlay.style.display = 'flex';
-            
-            // Prevent all events from bubbling up to document/window (Keynote player)
-            const eventBlocker = function(e) {
-                e.stopPropagation();
-            };
-            ['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend', 'touchmove'].forEach(function(evt) {
-                overlay.addEventListener(evt, eventBlocker);
+            // 2. Setup video player helper/play buttons
+            function setupVideoPlayOverlay(video) {
+                if (video.__hasPlayOverlay) return;
+                video.__hasPlayOverlay = true;
+
+                // Ensure autoplay and standard settings
+                video.autoplay = true;
+                video.playsInline = true;
+                video.controls = false;
+
+                // Create play button container
+                const playBtn = document.createElement('div');
+                playBtn.className = 'custom-video-play-btn';
+                playBtn.innerHTML = `
+                    <div class="play-btn-circle">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                `;
+
+                // Append overlay to the parent container of the video so it sits on top
+                video.parentNode.appendChild(playBtn);
+
+                // Sync play button position & size with the video
+                function syncSize() {
+                    playBtn.style.position = 'absolute';
+                    playBtn.style.top = video.style.top || '0px';
+                    playBtn.style.left = video.style.left || '0px';
+                    playBtn.style.width = video.style.width || (video.offsetWidth ? video.offsetWidth + 'px' : '100%');
+                    playBtn.style.height = video.style.height || (video.offsetHeight ? video.offsetHeight + 'px' : '100%');
+                    playBtn.style.transform = video.style.transform || '';
+                    playBtn.style.transformOrigin = video.style.transformOrigin || '';
+                }
+                syncSize();
+                
+                // Observe style changes (e.g., scale changes from Keynote resize)
+                const styleObserver = new MutationObserver(syncSize);
+                styleObserver.observe(video, { attributes: true, attributeFilter: ['style', 'class'] });
+
+                // Toggle play state on overlay click
+                playBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (video.paused) {
+                        video.play().catch(err => console.log('Play failed:', err));
+                    } else {
+                        video.pause();
+                    }
+                });
+
+                // Toggle play state on video click
+                video.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (video.paused) {
+                        video.play().catch(err => console.log('Play failed:', err));
+                    } else {
+                        video.pause();
+                    }
+                });
+
+                // Sync overlay state with video events
+                video.addEventListener('play', function() {
+                    playBtn.classList.add('playing');
+                });
+
+                video.addEventListener('pause', function() {
+                    playBtn.classList.remove('playing');
+                });
+
+                video.addEventListener('ended', function() {
+                    playBtn.classList.remove('playing');
+                });
+
+                // Try to play immediately if user has already interacted (which they have due to password gate)
+                video.play().catch(function(error) {
+                    console.log("Autoplay was blocked initially:", error);
+                });
+            }
+
+            // Monitor DOM for new video elements
+            const domObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) {
+                            const videos = node.tagName === 'VIDEO' ? [node] : node.querySelectorAll('video');
+                            videos.forEach(setupVideoPlayOverlay);
+                        }
+                    });
+                });
             });
-            
+            domObserver.observe(document.body, { childList: true, subtree: true });
+
             // 3. Set up event listeners for the password card
             const form = document.getElementById('password-form');
             const input = document.getElementById('password-input');
