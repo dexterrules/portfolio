@@ -8,10 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Hide keynote elements until authorized -->
+    <!-- Hide keynote elements until authorized without breaking layout calculations -->
     <style id="keynote-hide-style">
         #stageArea, #slideshowNavigator, #slideNumberControl, #slideNumberDisplay, #helpPlacard, #waitingIndicator {
-            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
     </style>
     
@@ -25,6 +26,11 @@
             --border-color: rgba(255, 255, 255, 0.08);
             --text-primary: #f4f4f5;
             --text-secondary: #a1a1aa;
+        }
+
+        /* Allow Keynote elements to fade in smoothly once authorized */
+        #stageArea, #slideshowNavigator, #slideNumberControl, #slideNumberDisplay, #helpPlacard, #waitingIndicator {
+            transition: opacity 0.5s ease;
         }
 
         #password-gate-overlay {
@@ -87,7 +93,7 @@
             max-width: 400px;
             z-index: 10;
             box-sizing: border-box;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
         }
 
         .password-card:hover {
@@ -315,36 +321,44 @@
     <div id="helpPlacard"></div>
     <div id="waitingIndicator"><div id="waitingSpinner"></div></div>
     
-    <!-- Password Verification & Dynamic Loading Script -->
+    <!-- Password Verification Script -->
     <script>
         (function() {
             const correctPassword = 'peppertree';
             const authKey = 'sanchit_portfolio_authorized';
+            const overlay = document.getElementById('password-gate-overlay');
+            const hideStyle = document.getElementById('keynote-hide-style');
             
-            function launchPortfolio() {
-                // Remove password gate UI from DOM to prevent interference
-                const overlay = document.getElementById('password-gate-overlay');
-                if (overlay) overlay.remove();
+            function unlock() {
+                // Fade out overlay
+                overlay.style.transition = 'opacity 0.4s ease';
+                overlay.style.opacity = '0';
                 
-                // Remove Keynote hide style to allow slides layout to show
-                const hideStyle = document.getElementById('keynote-hide-style');
+                // Remove hide style to display Keynote stage
                 if (hideStyle) hideStyle.remove();
                 
-                // Dynamically inject the Keynote player script
-                const script = document.createElement('script');
-                script.src = 'assets/player/main.js';
-                document.body.appendChild(script);
+                setTimeout(function() {
+                    if (overlay) overlay.remove();
+                }, 400);
             }
             
             // 1. Check if user is already authenticated
             if (localStorage.getItem(authKey) === 'true') {
-                launchPortfolio();
+                if (hideStyle) hideStyle.remove();
+                if (overlay) overlay.remove();
                 return;
             }
             
             // 2. Otherwise, display the password gate overlay
-            const overlay = document.getElementById('password-gate-overlay');
             overlay.style.display = 'flex';
+            
+            // Prevent all events from bubbling up to document/window (Keynote player)
+            const eventBlocker = function(e) {
+                e.stopPropagation();
+            };
+            ['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'click', 'touchstart', 'touchend', 'touchmove'].forEach(function(evt) {
+                overlay.addEventListener(evt, eventBlocker);
+            });
             
             // 3. Set up event listeners for the password card
             const form = document.getElementById('password-form');
@@ -356,7 +370,8 @@
             const eyeClosed = toggleBtn.querySelector('.eye-closed');
             
             // Toggle visibility of password field
-            toggleBtn.addEventListener('click', function() {
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
                 if (input.type === 'password') {
                     input.type = 'text';
                     eyeOpen.style.display = 'none';
@@ -371,6 +386,7 @@
             // Form submit handler
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 errorMsg.style.display = 'none';
                 
                 if (input.value === correctPassword) {
@@ -382,11 +398,7 @@
                     card.style.transform = 'scale(0.94) translateY(10px)';
                     card.style.opacity = '0';
                     
-                    overlay.style.transition = 'opacity 0.4s ease';
-                    overlay.style.opacity = '0';
-                    
-                    // Wait for animations to end, then boot player
-                    setTimeout(launchPortfolio, 400);
+                    unlock();
                 } else {
                     // Shake card and show error
                     card.classList.remove('shake');
@@ -399,5 +411,8 @@
             });
         })();
     </script>
+    
+    <!-- Load Keynote player script statically -->
+    <script src="assets/player/main.js"></script>
 </body>
 </html>
